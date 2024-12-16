@@ -9,6 +9,14 @@ import jobRouter from "./routes/jobRouter.js";
 import { dbConnection } from "./database/dbConnection.js"; 
 import { errorMiddleware } from "./middlewares/error.js";
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Recreate __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url); // Get the file's full path
+const __dirname = path.dirname(__filename);  
+
 const app = express();
 dotenv.config({path: "./config/config.env"});
 
@@ -22,10 +30,21 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
+const tempDir = path.join(__dirname, 'tmp/');
+if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true }); // Create the directory if it doesn't exist
+}
+
+// File upload middleware
 app.use(fileUpload({
-    useTempFiles:true,
-    tempFileDir:"/temp/",
+    useTempFiles: true,      // Enable temporary file storage
+    tempFileDir: tempDir,    // Use the ensured temp directory
 }));
+
+// app.use(fileUpload({
+//     useTempFiles:true,
+//     tempFileDir:"/temp/",
+// }));
 
 app.use("/api/v1/user",userRouter);
 app.use("/api/v1/application",applicationRouter);
